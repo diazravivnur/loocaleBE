@@ -60,10 +60,9 @@ const getCities = (data) => {
 
 const postUserProfileData = (data) => {
   const schema = Joi.object({
-    userId: Joi.number().required(),
     province: Joi.string().required(),
     city: Joi.string().required(),
-    connectId: Joi.number().required(),
+    connectId: Joi.array().required(),
   });
   return schema.validate(data);
 };

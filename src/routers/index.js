@@ -46,9 +46,9 @@ router.post('/user/validate/username', validateUsername);
 
 //area api
 router.get('/provinces', getProvinces);
-router.post('/cities', getCities);
+router.get('/cities', getCities);
 
 // Profiles API
-router.post('/userprofiles', uploadUserPicture('profileImage'), postUserProfileData);
+router.post('/userprofiles', uploadUserPicture('profileImage'), auth, postUserProfileData);
 
 module.exports = router;

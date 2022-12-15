@@ -19,7 +19,9 @@ exports.postUserProfileData = async (request, res) => {
     } else {
       image = request.files.profileImage[0].filename;
     }
-    const { userId, province, city, connectId } = request.body;
+
+    const { province, city, connectId } = request.body;
+    const userId = request.userId
 
     const createProfile = await Profiles.create({
       userId,

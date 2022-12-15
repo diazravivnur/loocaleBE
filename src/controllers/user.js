@@ -447,6 +447,28 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
+const validateUsernameOrEmail = async (email, username) => {
+  let response 
+  if(email) {
+    response = await User.findOne({
+      where: {
+        email: { [Op.like]: `%${email}%` },
+      },
+    })
+    console.log("masuk atas")
+
+    return response
+  } else {
+    response = await User.findOne({
+      where: {
+        user_name: { [Op.like]: `%${username}%` },
+      },
+    });
+    console.log("masuk bawah")
+    return response
+  }
+};
+
 exports.loginUser = async (request, res) => {
   try {
     const { email, password, username } = request.body;
@@ -454,30 +476,17 @@ exports.loginUser = async (request, res) => {
     if (error) {
       return res.status(400).send(Boom.badRequest(error.details[0].message));
     }
+    const response = await validateUsernameOrEmail(email, username)
 
-    // validate user
-    const checkExistingUserEmail = await User.findOne({
-      where: {
-        email: { [Op.like]: `%${email}%` },
-      },
-    });
-    console.log(111, checkExistingUserEmail);
-    const checkExistingUserName = await User.findOne({
-      where: {
-        user_name: { [Op.like]: `%${username}%` },
-      },
-    });
-    console.log(2222, checkExistingUserName.password);
-
-    if (checkExistingUserEmail === null && checkExistingUserName === null) {
-      return res.status(400).send(Boom.badRequest('No User Found'));
-    } else if (checkExistingUserEmail.password === null || checkExistingUserName.password === null) {
-      return res.status(400).send(Boom.badRequest("You haven't validate OTP yet"));
-    }
+    // if (checkExistingUserEmail === null && checkExistingUserName === null) {
+    //   return res.status(400).send(Boom.badRequest('No User Found'));
+    // } else if (checkExistingUserEmail.password === null || checkExistingUserName.password === null) {
+    //   return res.status(400).send(Boom.badRequest("You haven't validate OTP yet"));
+    // }
 
     const isValidPassword = await bcrypt.compare(
       password,
-      checkExistingUserEmail.password || checkExistingUserName.password
+      response.password
     );
 
     if (!isValidPassword) {
@@ -486,7 +495,7 @@ exports.loginUser = async (request, res) => {
 
     const token = jwt.sign(
       {
-        id: isValidPassword.id,
+        id: response.id,
       },
       secretKey
     );

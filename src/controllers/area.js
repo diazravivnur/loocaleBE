@@ -23,11 +23,11 @@ exports.getProvinces = async (request, res) => {
 
 exports.getCities = async (request, res) => {
   try {
-    const { error } = validationHelper.getCities(request.body);
+    const { error } = validationHelper.getCities(request.query);
     if (error) {
       return res.status(400).send(Boom.badRequest(error.details[0].message));
     }
-    const searchParams = request.body.province;
+    const searchParams = request.query.province;
     const getData = areaConfig.cities;
     let data = [];
     getData.filter((item) => {

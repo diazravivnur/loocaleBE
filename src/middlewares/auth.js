@@ -2,9 +2,9 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const secretKey = process.env.SECRETKEY;
 
-exports.auth = (req, res, next) => {
+exports.auth = (request, res, next) => {
   try {
-    const header = req.headers.authorization;
+    const header = request.headers.authorization;
     let token = header && header.replace("Bearer ", "");
 
     if (!token) {
@@ -15,8 +15,7 @@ exports.auth = (req, res, next) => {
     }
 
     const verified = jwt.verify(token, secretKey);
-
-    req.userId = verified.id;
+    request.userId = verified.id;
 
     next();
   } catch (error) {
