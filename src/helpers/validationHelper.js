@@ -14,7 +14,7 @@ const loginValidation = (data) => {
   const schema = Joi.object({
     email: Joi.string().optional().email(),
     username: Joi.string().optional(),
-    password: Joi.string().regex(strongPasswordRegex).error(stringPassswordError).required(),
+    password: Joi.string().required(),
   });
   return schema.validate(data);
 };
@@ -67,6 +67,14 @@ const postUserProfileData = (data) => {
   return schema.validate(data);
 };
 
+const resetPassValidation = (data) => {
+  const schema = Joi.object({
+    email: Joi.string().optional().email(),
+    password: Joi.string().required(),
+  });
+  return schema.validate(data);
+};
+
 module.exports = {
   addEmailValidation,
   OTPValidation,
@@ -76,4 +84,5 @@ module.exports = {
   usernameValidation,
   getCities,
   postUserProfileData,
+  resetPassValidation
 };

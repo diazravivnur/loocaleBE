@@ -4,7 +4,7 @@ const fs = require('fs');
 const Boom = require('boom');
 const validationHelper = require('../helpers/validationHelper');
 const { generateOTP } = require('../helpers/otpHelper');
-const { sendEmail } = require('../helpers/sendEmailHelper');
+const { sendEmail, sendForgotPassToEmail } = require('../helpers/sendEmailHelper');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
@@ -455,7 +455,6 @@ const validateUsernameOrEmail = async (email, username) => {
         email: { [Op.like]: `%${email}%` },
       },
     })
-    console.log("masuk atas")
 
     return response
   } else {
@@ -474,7 +473,7 @@ exports.loginUser = async (request, res) => {
     const { email, password, username } = request.body;
     const { error } = validationHelper.loginValidation(request.body);
     if (error) {
-      return res.status(400).send(Boom.badRequest(error.details[0].message));
+      return res.status(400).send(Boom.badRequest(error || error.details[0].message));
     }
     const response = await validateUsernameOrEmail(email, username)
 
@@ -658,6 +657,90 @@ exports.loginViaGoogle = async (request, res) => {
         user: {
           email: checkExistingUser.email,
           token,
+        },
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      status: 'failed',
+      message: 'server error',
+    });
+  }
+};
+
+exports.forgotPassword = async (request, res) => {
+  try {
+    const { email } = request.body;
+
+    const checkExistingUser = await User.findOne({
+      where: {
+        email: { [Op.like]: `%${email}%` },
+      },
+    });
+    if (checkExistingUser === null) {
+      return res.status(400).send(Boom.badRequest('No User Found'));
+    }
+    const linkReset = 'http://localhost:3000/reset-password'
+
+
+    sendForgotPassToEmail(email, linkReset);
+
+    res.send({
+      status: 'success',
+      message: 'Reset Password Email Has Been Sent',
+      data: {
+        user: {
+          email: checkExistingUser.email,
+        },
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      status: 'failed',
+      message: 'server error',
+    });
+  }
+};
+
+exports.resetPassword = async (request, res) => {
+  try {
+    const { error } = validationHelper.resetPassValidation(request.body);
+    if (error) {
+      return res.status(400).send(Boom.badRequest(error));
+    }
+    
+    const { email, password } = request.body;
+    const passwordHashed = await bcrypt.hash(password, 10);
+    const checkExistingUser = await User.findOne({
+      where: {
+        email: { [Op.like]: `%${email}%` },
+      },
+    });
+    if (checkExistingUser === null) {
+      return res.status(400).send(Boom.badRequest('No User Found'));
+    }
+
+   
+    await User.update(
+      {
+        password: passwordHashed,
+      },
+      {
+        where: {
+          email: { [Op.like]: `%${email}%` },
+        },
+      }
+    );
+    
+
+    res.send({
+      status: 'success',
+      message: 'Successfully Re Set Password',
+      data: {
+        user: {
+          email: checkExistingUser.email,
         },
       },
     });
