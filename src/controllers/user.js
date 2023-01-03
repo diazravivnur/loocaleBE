@@ -681,7 +681,14 @@ exports.forgotPassword = async (request, res) => {
     if (checkExistingUser === null) {
       return res.status(400).send(Boom.badRequest('No User Found'));
     }
-    const linkReset = 'http://localhost:3000/reset-password'
+    const secretKey = process.env.SECRETKEY;
+    const token = jwt.sign(
+      {
+        idUser: checkExistingUser.id,
+      },
+      secretKey
+    );
+    const linkReset = `http://localhost:3000/reset-password/${token}`
 
 
     sendForgotPassToEmail(email, linkReset);
@@ -711,7 +718,7 @@ exports.resetPassword = async (request, res) => {
       return res.status(400).send(Boom.badRequest(error));
     }
     
-    const { email, password } = request.body;
+    const { email, password, token} = request.body;
     const passwordHashed = await bcrypt.hash(password, 10);
     const checkExistingUser = await User.findOne({
       where: {
@@ -721,6 +728,7 @@ exports.resetPassword = async (request, res) => {
     if (checkExistingUser === null) {
       return res.status(400).send(Boom.badRequest('No User Found'));
     }
+    const decodedToken = jwt_decode(token);
 
    
     await User.update(
@@ -730,6 +738,7 @@ exports.resetPassword = async (request, res) => {
       {
         where: {
           email: { [Op.like]: `%${email}%` },
+          id: { [Op.like]: `%${decodedToken.idUser}%` },
         },
       }
     );
