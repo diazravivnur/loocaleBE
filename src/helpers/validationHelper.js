@@ -69,7 +69,6 @@ const postUserProfileData = (data) => {
 
 const resetPassValidation = (data) => {
   const schema = Joi.object({
-    email: Joi.string().optional().email(),
     password: Joi.string().required(),
     token: Joi.string().required(),
   });

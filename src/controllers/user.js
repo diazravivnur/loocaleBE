@@ -713,25 +713,25 @@ exports.forgotPassword = async (request, res) => {
 };
 
 exports.resetPassword = async (request, res) => {
+  const { error } = validationHelper.resetPassValidation(request.body);
+  if (error) {
+    return res.status(400).send(Boom.badRequest(error));
+  }
+
   try {
-    const { error } = validationHelper.resetPassValidation(request.body);
-    if (error) {
-      return res.status(400).send(Boom.badRequest(error));
-    }
-    
     const { email, password, token} = request.body;
     const passwordHashed = await bcrypt.hash(password, 10);
+    
+    const decodedToken = jwt_decode(token);
     const checkExistingUser = await User.findOne({
       where: {
-        email: { [Op.like]: `%${email}%` },
+        email: { [Op.like]: `%${decodedToken.email}%` },
+        id: { [Op.like]: `%${decodedToken.idUser}%` },
       },
     });
     if (checkExistingUser === null) {
       return res.status(400).send(Boom.badRequest('No User Found'));
     }
-    const decodedToken = jwt_decode(token);
-    console.log(decodedToken)
-
    
     await User.update(
       {
@@ -739,7 +739,7 @@ exports.resetPassword = async (request, res) => {
       },
       {
         where: {
-          email: { [Op.like]: `%${email}%` },
+          email: { [Op.like]: `%${decodedToken.email}%` },
           id: { [Op.like]: `%${decodedToken.idUser}%` },
         },
       }
