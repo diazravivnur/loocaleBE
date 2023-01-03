@@ -685,6 +685,7 @@ exports.forgotPassword = async (request, res) => {
     const token = jwt.sign(
       {
         idUser: checkExistingUser.id,
+        email: checkExistingUser.email,
       },
       secretKey
     );
@@ -729,6 +730,7 @@ exports.resetPassword = async (request, res) => {
       return res.status(400).send(Boom.badRequest('No User Found'));
     }
     const decodedToken = jwt_decode(token);
+    console.log(decodedToken)
 
    
     await User.update(
