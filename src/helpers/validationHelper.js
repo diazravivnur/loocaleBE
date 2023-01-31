@@ -75,6 +75,29 @@ const resetPassValidation = (data) => {
   return schema.validate(data);
 };
 
+const createPostTextValidation = (data) => {
+  const schema = Joi.object({
+    postText: Joi.string().required(),
+    location: Joi.string().required(),
+  });
+  return schema.validate(data);
+};
+
+const likePostValidation = (data) => {
+  const schema = Joi.object({
+    postId: Joi.string().required(),
+  });
+  return schema.validate(data);
+};
+
+const createCommentTextValidation = (data) => {
+  const schema = Joi.object({
+    commentText: Joi.string().required(),
+    postId: Joi.number().required(),
+  });
+  return schema.validate(data);
+};
+
 module.exports = {
   addEmailValidation,
   OTPValidation,
@@ -84,5 +107,8 @@ module.exports = {
   usernameValidation,
   getCities,
   postUserProfileData,
-  resetPassValidation
+  resetPassValidation,
+  createPostTextValidation,
+  likePostValidation,
+  createCommentTextValidation
 };
