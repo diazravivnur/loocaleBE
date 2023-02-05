@@ -79,7 +79,7 @@ exports.getAllPosts = async (request, res) => {
             },
           ],
           attributes : {
-            exclude : ['createdAt', 'updatedAt', 'idUserComment', 'postId', 'id']
+            exclude : [ 'postId', 'updatedAt', ]
           }
         },
         {
@@ -139,7 +139,7 @@ const __postMediaToDB = async (request) => {
   try {
     const media = request.files.media_files;
     const arr = media.map((item) => {
-      return { media_url: item.filename}
+      return { media_url: baseUrlFile + item.filename}
     });
     // add to db
     const inputData = await Media.bulkCreate(arr, 

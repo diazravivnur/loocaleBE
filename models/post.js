@@ -27,6 +27,7 @@ module.exports = (sequelize, DataTypes) => {
   Post.init({
     postText: DataTypes.STRING,
     location: DataTypes.STRING,
+    location_detail: DataTypes.STRING,
     liked: DataTypes.INTEGER
   }, {
     sequelize,

@@ -24,6 +24,9 @@ module.exports = {
       location: {
         type: Sequelize.STRING
       },
+      location_detail: {
+        type: Sequelize.STRING
+      },
       liked: {
         type: Sequelize.INTEGER
       },
