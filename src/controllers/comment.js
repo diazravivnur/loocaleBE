@@ -16,7 +16,6 @@ exports.postComment = async (request, res) => {
 
     const { commentText, postId} = request.body;
     const userId = request.userId
-    console.log(request.body)
 
     const createProfile = await Comments.create({
       idUserComment: userId,

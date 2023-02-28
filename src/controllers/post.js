@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { Post, User, Comments, Media, PostMedia } = require('../../models');
+const { Post, User, Comments, Media, PostMedia, PostCategories, Connect, Likes } = require('../../models');
 const fs = require('fs');
 const Boom = require('boom');
 const validationHelper = require('../helpers/validationHelper');
@@ -8,14 +8,15 @@ const baseUrlFile = 'http://localhost:5000/';
 const defaultProfilePicture = '1670037246598-istockphoto-522855255-612x612';
 
 exports.postText = async (request, res) => {
+  const { error } = validationHelper.createPostTextValidation(request.body);
+  if (error) {
+    return res.status(400).send(Boom.badRequest(error.details[0].message));
+  }
   try {
-    const { error } = validationHelper.createPostTextValidation(request.body);
-    if (error) {
-      return res.status(400).send(Boom.badRequest(error.details[0].message));
-    }
-
-    const { postText, location } = request.body;
+    const { postText, location, categories } = request.body;
     const userId = request.userId
+    let tmpArr = []
+    let tmpArr2 = []
 
     const postedMedia = await __postMediaToDB(request)
     const idPostedMedia = postedMedia.map(item=>(item.id))
@@ -26,19 +27,24 @@ exports.postText = async (request, res) => {
       location,
       liked: 0
     });
-    const idPostedPost = createProfile.id
-    const dataPostedToMediaProduct = [ 
-      {
-        "postId" : idPostedPost,
-        "mediaId" : idPostedMedia[0]
-      },
-      {
-        "postId" : idPostedPost,
-        "mediaId" : idPostedMedia[1]
-      }
-    ]
 
-    const response = await PostMedia.bulkCreate(dataPostedToMediaProduct);
+    categories.reduce(async (result, item) => {
+      let tmpData;
+        tmpData = {connectId:item, postId: createProfile.id}
+        tmpArr2.push(tmpData)
+      return Promise.resolve(result);
+      }, Promise.resolve([]));
+
+    await PostCategories.bulkCreate(tmpArr2);
+
+    idPostedMedia.reduce(async (result, item) => {
+      let tmpData;
+        tmpData = {mediaId:item, postId: createProfile.id}
+        tmpArr.push(tmpData)
+      return Promise.resolve(result);
+      }, Promise.resolve([]));
+
+    const response =  await PostMedia.bulkCreate(tmpArr);
 
 
     res.status(200).send({
@@ -62,6 +68,13 @@ exports.getAllPosts = async (request, res) => {
 
     const getPosts = await Post.findAll({
       include: [
+        {
+          model: Connect,
+          as : 'Categories',
+          attributes : {
+            exclude : ['createdAt', 'updatedAt']
+          }
+        },
         {
           model: User,
           attributes : {
@@ -89,6 +102,12 @@ exports.getAllPosts = async (request, res) => {
             exclude : ['createdAt', 'updatedAt', 'id']
           }
         },
+        {
+          model: Likes,
+          attributes : {
+            exclude : ['createdAt', 'updatedAt']
+          }
+        }
       ],
     });
 
@@ -112,20 +131,36 @@ exports.likePost = async (request, res) => {
     if (error) {
       return res.status(400).send(Boom.badRequest(error.details[0].message));
     }
-    const { postId } = request.body;
-    console.log(postId)
-    const a = await Post.increment('liked', {
-      by: 1, 
+    const { postId  } = request.body;
+    const userId = request.userId
+
+    const checkUserAlreadyLikes = await Likes.findOne({
       where: {
-        id: postId,
+        likedById: userId,
       },
-     }
-    );
-console.log(a)
-    res.status(200).send({
-      statusCode: '200',
-      status: 'success liked',
     });
+    let response 
+    if ( checkUserAlreadyLikes ) {
+      await Likes.destroy({
+        where: {
+          likedById: userId,
+        },
+      });
+      res.status(200).send({
+        statusCode: '200',
+        status: 'success Unliked',
+      });
+    } else {
+        await Likes.create({
+        likedById: userId,
+        postId : postId
+      });
+      res.status(200).send({
+        statusCode: '200',
+        status: 'success liked',
+      });
+    }
+
   } catch (error) {
     console.log(error);
     res.status(500).send({

@@ -15,6 +15,7 @@ exports.auth = (request, res, next) => {
     }
 
     const verified = jwt.verify(token, secretKey);
+    console.log(verified)
     request.userId = verified.id;
 
     next();

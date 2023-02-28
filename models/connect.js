@@ -14,6 +14,11 @@ module.exports = (sequelize, DataTypes) => {
         as: 'communities',
         foreignKey: 'connectId',
       });
+      Connect.belongsToMany(models.Post, {
+        through: 'PostCategories',
+        as: 'Posts',
+        foreignKey: 'connectId',
+      });
     }
   }
   Connect.init(

@@ -22,6 +22,14 @@ module.exports = (sequelize, DataTypes) => {
       Post.belongsTo(models.User, {
         foreignKey: 'userId',
       });
+      Post.belongsToMany(models.Connect, {
+        through: 'PostCategories',
+        as: 'Categories',
+        foreignKey: 'postId',
+      });
+      Post.hasMany(models.Likes, {
+        foreignKey: 'postId',
+      });
     }
   };
   Post.init({
