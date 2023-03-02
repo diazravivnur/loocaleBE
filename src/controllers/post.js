@@ -43,7 +43,6 @@ exports.postText = async (request, res) => {
         tmpArr.push(tmpData)
       return Promise.resolve(result);
       }, Promise.resolve([]));
-
     const response =  await PostMedia.bulkCreate(tmpArr);
 
 
@@ -174,7 +173,7 @@ const __postMediaToDB = async (request) => {
   try {
     const media = request.files.media_files;
     const arr = media.map((item) => {
-      return { media_url: baseUrlFile + item.filename}
+      return { media_url: baseUrlFile + "post-media/" + item.filename}
     });
     // add to db
     const inputData = await Media.bulkCreate(arr, 

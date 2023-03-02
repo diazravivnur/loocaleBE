@@ -491,10 +491,14 @@ exports.loginUser = async (request, res) => {
     if (!isValidPassword) {
       return res.status(400).send(Boom.badRequest("Email and Password don't match"));
     }
+		console.log("response: ", response);
 
     const token = jwt.sign(
       {
         id: response.id,
+				user_name: response.user_name,
+				full_name: response.full_name,
+				thumbnail: response.thumbnail,
       },
       secretKey
     );
