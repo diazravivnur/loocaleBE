@@ -329,7 +329,7 @@ exports.getUser = async (req, res) => {
 };
 
 exports.getUserDetail = async (req, res) => {
-  const { id } = req.params;
+  const id  = req.userId;
 
   try {
     const data = await User.findOne({
@@ -536,25 +536,31 @@ exports.signUpGoogle = async (request, res) => {
 
     const OTP = generateOTP();
     const email = decodedClientID.email;
+    const full_name = decodedClientID.name;
+    const user_name = (decodedClientID.given_name+decodedClientID.family_name+Date.now().toString().slice(-2)).toLowerCase()
     //check Existing Users
     const checkExistingUser = await User.findOne({
       where: {
         email: { [Op.like]: `%${email}%` },
       },
     });
-    const token = jwt.sign(
-      {
-        id: checkExistingUser.id,
-      },
-      secretKey
-    );
+    let token 
 
     if (!checkExistingUser) {
-      await User.create({
+      const createUser = await User.create({
         email,
         // generate random password biar kaya atlassian (kalo login via google, ya google only. gabisa login via input email biasa)
         password: generatePassword(),
+        isActive : true, 
+        full_name : full_name,
+        user_name : user_name
       });
+      token = jwt.sign(
+        {
+          id: createUser.id,
+        },
+        secretKey
+      );
       res.send({
         status: 'success',
         message: 'Successfully Create User',
@@ -564,6 +570,12 @@ exports.signUpGoogle = async (request, res) => {
         },
       });
     } else {
+      token = jwt.sign(
+        {
+          id: checkExistingUser.id,
+        },
+        secretKey
+      );
       res.send({
         status: 'success',
         message: 'Logging user in',

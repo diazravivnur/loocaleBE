@@ -21,7 +21,8 @@ const {
   validateUsername,
   loginViaGoogle,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  getUserDetail
 } = require('../controllers/user');
 
 const { getProvinces, getCities } = require('../controllers/area');
@@ -41,6 +42,7 @@ router.get('/connect', getAllConnectData);
 
 //users api
 router.get('/users', auth, getUser);
+router.get('/user', auth, getUserDetail);
 router.post('/user/email', addEmail);
 router.post('/user/validate/otp', validateOTP);
 router.post('/user/signup/form', signUpForm);
