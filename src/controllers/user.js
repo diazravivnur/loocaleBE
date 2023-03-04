@@ -189,7 +189,7 @@ exports.signUpForm = async (request, res) => {
         user_name: { [Op.like]: `%${user_name}%` },
       },
     });
-		console.log("existing user", checkExistingUser)
+    console.log('existing user', checkExistingUser);
     if (checkExistingUserName) {
       return res.status(400).send(Boom.badRequest('User Name Already Taken'));
     } else if (checkExistingUser === null) {
@@ -329,7 +329,7 @@ exports.getUser = async (req, res) => {
 };
 
 exports.getUserDetail = async (req, res) => {
-  const id  = req.userId;
+  const id = req.userId;
 
   try {
     const data = await User.findOne({
@@ -537,23 +537,27 @@ exports.signUpGoogle = async (request, res) => {
     const OTP = generateOTP();
     const email = decodedClientID.email;
     const full_name = decodedClientID.name;
-    const user_name = (decodedClientID.given_name+decodedClientID.family_name+Date.now().toString().slice(-2)).toLowerCase()
+    const user_name = (
+      decodedClientID.given_name +
+      decodedClientID.family_name +
+      Date.now().toString().slice(-2)
+    ).toLowerCase();
     //check Existing Users
     const checkExistingUser = await User.findOne({
       where: {
         email: { [Op.like]: `%${email}%` },
       },
     });
-    let token 
+    let token;
 
     if (!checkExistingUser) {
       const createUser = await User.create({
         email,
         // generate random password biar kaya atlassian (kalo login via google, ya google only. gabisa login via input email biasa)
         password: generatePassword(),
-        isActive : true, 
-        full_name : full_name,
-        user_name : user_name
+        isActive: true,
+        full_name: full_name,
+        user_name: user_name,
       });
       token = jwt.sign(
         {
@@ -576,6 +580,9 @@ exports.signUpGoogle = async (request, res) => {
       token = jwt.sign(
         {
           id: checkExistingUser.id,
+					full_name: checkExistingUser.full_name,
+          user_name: checkExistingUser.user_name,
+          thumbnail: checkExistingUser.thumbnail
         },
         secretKey
       );
@@ -671,6 +678,9 @@ exports.loginViaGoogle = async (request, res) => {
     const token = jwt.sign(
       {
         id: checkExistingUser.id,
+        full_name: checkExistingUser.full_name,
+        user_name: checkExistingUser.user_name,
+        thumbnail: '',
       },
       secretKey
     );
