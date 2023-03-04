@@ -189,7 +189,7 @@ exports.signUpForm = async (request, res) => {
         user_name: { [Op.like]: `%${user_name}%` },
       },
     });
-
+		console.log("existing user", checkExistingUser)
     if (checkExistingUserName) {
       return res.status(400).send(Boom.badRequest('User Name Already Taken'));
     } else if (checkExistingUser === null) {
@@ -208,7 +208,15 @@ exports.signUpForm = async (request, res) => {
         }
       );
     }
-    const token = jwt.sign({ id: checkExistingUser.id, email: checkExistingUser.email }, secretKey);
+    const token = jwt.sign(
+      {
+        id: checkExistingUser.id,
+        email: checkExistingUser.email,
+        user_name,
+        full_name,
+      },
+      secretKey
+    );
     res.send({
       statusCode: 200,
       message: 'Success',
@@ -448,23 +456,23 @@ exports.updateProfile = async (req, res) => {
 };
 
 const validateUsernameOrEmail = async (email, username) => {
-  let response 
-  if(email) {
+  let response;
+  if (email) {
     response = await User.findOne({
       where: {
         email: { [Op.like]: `%${email}%` },
       },
-    })
+    });
 
-    return response
+    return response;
   } else {
     response = await User.findOne({
       where: {
         user_name: { [Op.like]: `%${username}%` },
       },
     });
-    console.log("masuk bawah")
-    return response
+    console.log('masuk bawah');
+    return response;
   }
 };
 
@@ -475,7 +483,7 @@ exports.loginUser = async (request, res) => {
     if (error) {
       return res.status(400).send(Boom.badRequest(error || error.details[0].message));
     }
-    const response = await validateUsernameOrEmail(email, username)
+    const response = await validateUsernameOrEmail(email, username);
 
     // if (checkExistingUserEmail === null && checkExistingUserName === null) {
     //   return res.status(400).send(Boom.badRequest('No User Found'));
@@ -483,18 +491,19 @@ exports.loginUser = async (request, res) => {
     //   return res.status(400).send(Boom.badRequest("You haven't validate OTP yet"));
     // }
 
-    const isValidPassword = await bcrypt.compare(
-      password,
-      response.password
-    );
+    const isValidPassword = await bcrypt.compare(password, response.password);
 
     if (!isValidPassword) {
       return res.status(400).send(Boom.badRequest("Email and Password don't match"));
     }
+    console.log('response: ', response);
 
     const token = jwt.sign(
       {
         id: response.id,
+        user_name: response.user_name,
+        full_name: response.full_name,
+        thumbnail: response.thumbnail,
       },
       secretKey
     );
@@ -689,8 +698,7 @@ exports.forgotPassword = async (request, res) => {
       },
       secretKey
     );
-    const linkReset = `http://localhost:3000/reset-password/${token}`
-
+    const linkReset = `http://localhost:3000/reset-password/${token}`;
 
     sendForgotPassToEmail(email, linkReset);
 
@@ -719,9 +727,9 @@ exports.resetPassword = async (request, res) => {
   }
 
   try {
-    const { email, password, token} = request.body;
+    const { email, password, token } = request.body;
     const passwordHashed = await bcrypt.hash(password, 10);
-    
+
     const decodedToken = jwt_decode(token);
     const checkExistingUser = await User.findOne({
       where: {
@@ -732,7 +740,7 @@ exports.resetPassword = async (request, res) => {
     if (checkExistingUser === null) {
       return res.status(400).send(Boom.badRequest('No User Found'));
     }
-   
+
     await User.update(
       {
         password: passwordHashed,
@@ -744,7 +752,6 @@ exports.resetPassword = async (request, res) => {
         },
       }
     );
-    
 
     res.send({
       status: 'success',
