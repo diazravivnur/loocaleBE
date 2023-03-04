@@ -558,6 +558,9 @@ exports.signUpGoogle = async (request, res) => {
       token = jwt.sign(
         {
           id: createUser.id,
+          full_name: createUser.full_name,
+          user_name: createUser.user_name,
+          thumbnail: '',
         },
         secretKey
       );
